@@ -2,6 +2,7 @@ boardtt
 =======
 https://github.com/translate-board-game/boardtt
 
+docker build . -t boardtt 
 
 Description
 -----------
