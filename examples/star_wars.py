@@ -1,6 +1,9 @@
 import logging
 
-from boardtt.utils import configure, CardType, CardArea, process_image, debug_image
+from boardtt.manager import debug_image, process_image
+from boardtt.card_type import CardType
+from boardtt.card_area import CardArea
+from boardtt.config import configure
 
 
 class StarWarsLure(CardType):

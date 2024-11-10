@@ -1,7 +1,10 @@
 import logging
 from pathlib import Path
 
-from boardtt.utils import configure, CardType, CardArea, process_image
+from boardtt.manager import process_image
+from boardtt.card_type import CardType
+from boardtt.card_area import CardArea
+from boardtt.config import configure
 
 
 class Base(CardType):
