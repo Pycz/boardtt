@@ -1,7 +1,10 @@
 import os
+from typing import Type
 
-from boardtt.config import LOGGER
-from boardtt.marker import get_cards_from_file
+from boardtt.card_type import CardType
+from boardtt.config import Config
+from boardtt.logger import LOGGER
+from boardtt.marker import get_cards_from_file, PlanarCardMarker, CardMarker
 
 
 def debug_image(
@@ -42,13 +45,6 @@ def debug_image(
 
 
 def process_image(image_path, card_types):
-    """Производит обработку указанного скана, используя
-    указанные типы карт.
-
-    :param image_path:
-    :param card_types:
-    :return:
-    """
     LOGGER.info("Image processing started")
 
     target_dir = os.path.splitext(image_path)[0]
@@ -61,3 +57,32 @@ def process_image(image_path, card_types):
         data.save_files()
 
     LOGGER.info("Image processing finished")
+
+
+class ImageProcessingManager:
+    def __init__(self, config: Config, image_path: str | os.PathLike, card_types: list[Type[CardType]]):
+        self.config = config
+        self.image_path = image_path
+        self.card_types = card_types
+        self.card_marker: CardMarker = PlanarCardMarker(image_path)
+
+    def debug_process(self, debug=False, target_area="text", show_composite=False):
+        debug_image(
+            self.image_path, self.card_types[0], debug, target_area, show_composite
+        )
+
+    def process(self):
+        """Производит обработку указанного скана, используя
+        указанные типы карт"""
+        LOGGER.info("Image processing started")
+
+        target_dir = os.path.splitext(self.image_path)[0]
+        LOGGER.debug("Target path: %s" % target_dir)
+        cards = self.card_marker.get_cards()
+
+        for card_type in self.card_types:
+            LOGGER.info("Processing using %s ..." % card_type.__name__)
+            card = card_type(cards, target_dir)
+            card.save_files()
+
+        LOGGER.info("Image processing finished")
