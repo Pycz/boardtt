@@ -6,7 +6,7 @@ from collections import OrderedDict
 from PIL import Image, ImageEnhance, ImageOps, ImageDraw, ImageFont
 
 from boardtt.card_area import CardArea
-from boardtt.config import LOGGER
+from boardtt.logger import LOGGER
 from boardtt.tesseract import TesseractAPI
 
 RE_SPACES = re.compile(r"(\s)+", re.MULTILINE)
