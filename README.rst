@@ -1,8 +1,14 @@
 boardtt
 =======
-https://github.com/translate-board-game/boardtt
 
-docker build . -t boardtt
+https://github.com/Pycz/boardtt
+
+(актуализированный и докеризированный форк https://github.com/translate-board-game/boardtt)
+
+How to run (in Docker(Compose))
+-------
+
+`docker-compose run --build --rm app`
 
 Description
 -----------
@@ -51,7 +57,13 @@ Description
 Требования
 ----------
 
-* Ubuntu Linux
-* Python 2.7
-* Pillow
-* Tesseract OCR (libtesseract.so)
+* Docker with Docker Compose
+
+или если запускать локально:
+
+* Ubuntu 24.04
+* Python 3.12
+* Poetry
+* Tesseract OCR
+
+но лучше запускайте через докер :)
