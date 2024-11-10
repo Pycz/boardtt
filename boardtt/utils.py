@@ -1,14 +1,12 @@
-# encoding: utf-8
-from __future__ import unicode_literals
 import os
 import re
 import json
-import ctypes
 import logging
 from collections import OrderedDict
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageOps, ImageFont
 
+from boardtt.tesseract import TesseractAPI
 
 LOGGER = logging.getLogger(__name__)
 
@@ -58,54 +56,7 @@ def configure_logging(log_level=logging.INFO, show_logger_names=False):
     logging.basicConfig(format=format_str, level=log_level)
 
 
-RE_SPACES = re.compile('(\s)+', re.MULTILINE)
-
-
-class BGTTException(Exception):
-    """Базовое исключение."""
-
-
-class TesseractException(BGTTException):
-    """Исключения взаимодействия с Tesseract."""
-
-
-class TesseractAPI(object):
-    """Простой API для распознования текста при помощи Tesseract OCR."""
-
-    def __init__(self):
-        lib_tesseract = '/usr/lib/libtesseract.so.3'
-        self.tess = ctypes.cdll.LoadLibrary(lib_tesseract)
-
-        self.tess_api = self.tess.TessBaseAPICreate()
-        tess_failed = self.tess.TessBaseAPIInit3(self.tess_api, None, 'eng'.encode('ascii'))
-
-        if tess_failed:
-            self.tess.TessBaseAPIDelete(self.tess_api)
-            raise TesseractException('Unable to initialize Tesseract OCR')
-
-    def recognize(self, img, as_html=False):
-        """Распознаёт текст на данном изображении.
-
-        :param img:
-        :param as_html:
-        :return:
-        """
-        RGB = 3
-        MODE = RGB
-
-        self.tess.TessBaseAPISetImage(self.tess_api, img.tostring(), img.size[0], img.size[1], MODE, MODE*img.size[0])
-        tess_failed = self.tess.TessBaseAPIRecognize(self.tess_api, None)
-
-        if tess_failed:
-            self.tess.TessBaseAPIDelete(self.tess_api)
-            raise TesseractException('Unable to recognize text.')
-
-        if as_html:
-            text = self.tess.TessBaseAPIGetHOCRText(self.tess_api)
-        else:
-            text = self.tess.TessBaseAPIGetUTF8Text(self.tess_api)
-        return ctypes.string_at(text)
-
+RE_SPACES = re.compile(r'(\s)+', re.MULTILINE)
 
 TESS = TesseractAPI()
 
@@ -185,7 +136,7 @@ def get_cards_from_file(fpath):
     return get_cards(img)
 
 
-class CardArea(object):
+class CardArea:
 
     def __init__(self, x, x1, y, y1, render=True, rotate=None, bg_box_size=13):
         """Описывает регион на карте.
@@ -215,7 +166,7 @@ class CardArea(object):
         return mm_to_pixels(self.x), mm_to_pixels(self.y), mm_to_pixels(self.x1), mm_to_pixels(self.y1)
 
 
-class CardType(object):
+class CardType:
     """Тип карты характеризуется её внешним видом, а точнее расположением на ней
     регионов с данными. Различные типы карт могут содержать различный набор регионов
     и обрабатываться по различающимся правилам.
@@ -391,7 +342,7 @@ class CardType(object):
         :return:
         """
         val = val.split('\n')[0].replace('o', '0').replace('D', '0')
-        return re.sub('\D', '', val)
+        return re.sub(r'\D', '', val)
 
     @classmethod
     def has_marker(cls, card):
@@ -462,7 +413,7 @@ class CardType(object):
         """
         dr = ImageDraw.Draw(img)
 
-        line_height = font.getsize('jN')[1] * 1.25
+        line_height = font.getbbox('jN')[1] * 1.25
 
         for line in text.splitlines():
             dr.text((x, y), line, color, font=font)
@@ -474,7 +425,7 @@ class CardType(object):
     def get_font(cls, font_size=40, font_name=None):
         """Возвращает шрифт указанноти типа и размера.
 
-        /usr/share/fonts/truetype/ubuntu-font-family/
+        /usr/share/fonts/truetype/ubuntu/
         /usr/share/fonts/truetype/freefont/
         FreeMono.ttf
         FreeMonoBold.ttf
@@ -497,7 +448,7 @@ class CardType(object):
             font_name = 'Ubuntu-M.ttf'
 
         if '/' not in font_name:
-            font_name = '/usr/share/fonts/truetype/ubuntu-font-family/%s' % font_name
+            font_name = f'/usr/share/fonts/truetype/ubuntu/{font_name}'
 
         return ImageFont.truetype(font_name, font_size)
 
@@ -518,7 +469,7 @@ class CardType(object):
             img = img.rotate(area.rotate)
 
         text = TESS.recognize(img).strip()
-        text = re.sub(RE_SPACES, '\g<0>', text)  # strip consecutive whitespaces
+        text = re.sub(RE_SPACES, r'\g<0>', text)  # strip consecutive whitespaces
 
         return text, img, img_orig
 
@@ -537,20 +488,22 @@ class CardType(object):
         longest_line = ''
         longest_len = 0
 
-        for lines_num, line in enumerate(text.splitlines(), 1):
+        for line in text.splitlines():
             l = len(line)
             if l > longest_len:
                 longest_line = line
                 longest_len = l
 
+        lines_quantity = len(text.splitlines())
+
         def get_size(base_size):
             font = cls.get_font(base_size)
-            line_size = font.getsize(longest_line)
+            line_size = font.getbbox(longest_line)
 
             line_height = line_size[1]
 
-            if lines_num > 1:
-                line_height = (lines_num * line_height)  # + ((lines_num-1) * line_height)
+            if lines_quantity > 1:
+                line_height = (lines_quantity * line_height)  # + ((lines_quantity-1) * line_height)
 
             if line_height > max_height or line_size[0] > max_width:
                 return get_size(base_size-2)
