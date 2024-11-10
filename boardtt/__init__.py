@@ -6,7 +6,6 @@ VERSION = (0, 1, 0)
 
 
 def main():
-
     # arg_parser = argparse.ArgumentParser(prog='boardtt', description='Board Games Translator Toolbox')
     #
     # arg_parser.add_argument('arg1', help='arg1 help')

@@ -20,7 +20,14 @@ CARDS_ROWS = 3
 CARDS_COLS = 3
 
 
-def configure(image_dpi=600, card_height_mm=88, card_width_mm=62, cards_rows=3, cards_cols=3, log_level=logging.INFO):
+def configure(
+    image_dpi=600,
+    card_height_mm=88,
+    card_width_mm=62,
+    cards_rows=3,
+    cards_cols=3,
+    log_level=logging.INFO,
+):
     """Конфигурирует приложение.
 
     :param image_dpi: Ращерешение скана. Точки на дюйм.
@@ -50,13 +57,13 @@ def configure_logging(log_level=logging.INFO, show_logger_names=False):
     :param show_logger_names: bool - flag to show logger names in output
     :return:
     """
-    format_str = '%(levelname)s: %(message)s'
+    format_str = "%(levelname)s: %(message)s"
     if show_logger_names:
-        format_str = '%(name)s\t\t ' + format_str
+        format_str = "%(name)s\t\t " + format_str
     logging.basicConfig(format=format_str, level=log_level)
 
 
-RE_SPACES = re.compile(r'(\s)+', re.MULTILINE)
+RE_SPACES = re.compile(r"(\s)+", re.MULTILINE)
 
 TESS = TesseractAPI()
 
@@ -112,15 +119,12 @@ def get_cards(img):
 
     for col_num in range(CARDS_COLS):
         for row_num in range(CARDS_ROWS):
-            LOGGER.debug('Getting card %sx%s ...' % (col_num+1, row_num+1))
+            LOGGER.debug("Getting card %sx%s ..." % (col_num + 1, row_num + 1))
             coords = get_card_coords(row_num, col_num)
             card = img.crop(coords)
-            cards.append({
-                'img': card,
-                'coords': coords
-            })
+            cards.append({"img": card, "coords": coords})
 
-    LOGGER.info('Source image split into %s cards' % len(cards))
+    LOGGER.info("Source image split into %s cards" % len(cards))
 
     return cards
 
@@ -131,13 +135,12 @@ def get_cards_from_file(fpath):
     :param fpath:
     :return:
     """
-    LOGGER.info('Loading cards from %s' % fpath)
+    LOGGER.info("Loading cards from %s" % fpath)
     img = open_image_file(fpath)
     return get_cards(img)
 
 
 class CardArea:
-
     def __init__(self, x, x1, y, y1, render=True, rotate=None, bg_box_size=13):
         """Описывает регион на карте.
 
@@ -163,7 +166,12 @@ class CardArea:
 
         :return:
         """
-        return mm_to_pixels(self.x), mm_to_pixels(self.y), mm_to_pixels(self.x1), mm_to_pixels(self.y1)
+        return (
+            mm_to_pixels(self.x),
+            mm_to_pixels(self.y),
+            mm_to_pixels(self.x1),
+            mm_to_pixels(self.y1),
+        )
 
 
 class CardType:
@@ -198,11 +206,11 @@ class CardType:
         self.cards = OrderedDict()
 
         for idx, card in enumerate(cards):
-            if self.marker_area is None or self.has_marker(card['img']):
+            if self.marker_area is None or self.has_marker(card["img"]):
                 self.cards[idx] = {
-                    'img': card['img'],
-                    'coords': card['coords'],
-                    'areas': self.get_areas(card['img'])
+                    "img": card["img"],
+                    "coords": card["coords"],
+                    "areas": self.get_areas(card["img"]),
                 }
 
     def get_file_dir(self, card_id, fname):
@@ -230,37 +238,47 @@ class CardType:
         """
 
         card_id = cls.get_card_id(idx, card)
-        LOGGER.info('Generating localized image for %s ...' % card_id)
+        LOGGER.info("Generating localized image for %s ..." % card_id)
 
-        card_coords = card['coords']
-        tr_img = Image.new('RGBA', (card_coords[2]-card_coords[0], card_coords[3]-card_coords[1]), (255, 255, 255, 0))
+        card_coords = card["coords"]
+        tr_img = Image.new(
+            "RGBA",
+            (card_coords[2] - card_coords[0], card_coords[3] - card_coords[1]),
+            (255, 255, 255, 0),
+        )
 
-        for area_name, area_data in card['areas'].items():
-            if area_data['render']:
-                LOGGER.debug('Rendering `%s` area ...' % area_name)
+        for area_name, area_data in card["areas"].items():
+            if area_data["render"]:
+                LOGGER.debug("Rendering `%s` area ..." % area_name)
 
-                rotate = area_data['rotate']
-                coords = area_data['coords']
+                rotate = area_data["rotate"]
+                coords = area_data["coords"]
 
                 height = coords[3] - coords[1]
                 width = coords[2] - coords[0]
-                img_tr = area_data['img_bg'].copy()
+                img_tr = area_data["img_bg"].copy()
 
                 if rotate is not None:
                     img_tr = img_tr.rotate(rotate)
                     height, width = width, height
 
-                text = area_data['str']
-                font, text_x, text_y, = cls.adjust_text_to_box(text, height, width)
+                text = area_data["str"]
+                (
+                    font,
+                    text_x,
+                    text_y,
+                ) = cls.adjust_text_to_box(text, height, width)
                 img_tr = cls.render_text(img_tr, text, font, text_x, text_y)
 
                 if rotate is not None:  # Восстанавливаем изначальную ориентацию.
                     abs_ = abs(rotate)
-                    img_tr = img_tr.rotate(abs_ if area_data['rotate'] < 0 else 0-abs_)
+                    img_tr = img_tr.rotate(
+                        abs_ if area_data["rotate"] < 0 else 0 - abs_
+                    )
 
-                tr_img.paste(img_tr, (coords[0], coords[1]), area_data['img_bg'])
+                tr_img.paste(img_tr, (coords[0], coords[1]), area_data["img_bg"])
             else:
-                LOGGER.debug('Skipping `%s` area ...' % area_name)
+                LOGGER.debug("Skipping `%s` area ..." % area_name)
 
         return tr_img
 
@@ -273,8 +291,8 @@ class CardType:
         :param card_id:
         :return:
         """
-        LOGGER.info('Generating composite image for %s ...' % card_id)
-        return Image.alpha_composite(card_img.convert('RGBA'), tr_img)
+        LOGGER.info("Generating composite image for %s ..." % card_id)
+        return Image.alpha_composite(card_img.convert("RGBA"), tr_img)
 
     @classmethod
     def get_card_id(cls, idx, card):
@@ -286,7 +304,7 @@ class CardType:
         """
         card_id = idx + 1
         if cls.card_id_area is not None:
-            card_id = '%s-%s' % (card_id, card['areas'][cls.card_id_area]['str'])
+            card_id = "%s-%s" % (card_id, card["areas"][cls.card_id_area]["str"])
         return card_id
 
     def save_files(self):
@@ -297,41 +315,39 @@ class CardType:
         for idx, card in self.cards.items():
             card_id = self.get_card_id(idx, card)
 
-            LOGGER.info('Saving %s card files ...' % card_id)
+            LOGGER.info("Saving %s card files ..." % card_id)
 
-            json_fname = self.get_file_dir(card_id, 'card.json')
+            json_fname = self.get_file_dir(card_id, "card.json")
 
             if os.path.exists(json_fname):
-
-                LOGGER.debug('Translation file already exists.')
-                LOGGER.info('Card image files will be changed using data from %s.' % json_fname)
+                LOGGER.debug("Translation file already exists.")
+                LOGGER.info(
+                    "Card image files will be changed using data from %s." % json_fname
+                )
 
                 with open(json_fname) as f:
                     json_data = json.load(f)
 
-                for area_name, area_data in json_data['areas'].items():
-                    card['areas'][area_name]['str'] = area_data['str']
+                for area_name, area_data in json_data["areas"].items():
+                    card["areas"][area_name]["str"] = area_data["str"]
 
             else:  # do not overwrite existing files
-                card['img'].save(self.get_file_dir(card_id, 'card.png'))
+                card["img"].save(self.get_file_dir(card_id, "card.png"))
 
-                json_data = {
-                    'coords': card['coords'],
-                    'areas': {}
-                }
-                for area_name, area_data in card['areas'].items():
-                    json_data['areas'][area_name] = {'str': area_data['str']}
+                json_data = {"coords": card["coords"], "areas": {}}
+                for area_name, area_data in card["areas"].items():
+                    json_data["areas"][area_name] = {"str": area_data["str"]}
 
-                LOGGER.info('Generating card translation file %s ...' % json_fname)
+                LOGGER.info("Generating card translation file %s ..." % json_fname)
 
-                with open(json_fname, 'w') as f:
+                with open(json_fname, "w") as f:
                     json.dump(json_data, f, indent=4)
 
             img_tr = self.get_tr_image(card, idx)
-            img_comp = self.get_composite_image(card['img'], img_tr, card_id)
+            img_comp = self.get_composite_image(card["img"], img_tr, card_id)
 
-            img_tr.save(self.get_file_dir(card_id, 'card_tr.png'))
-            img_comp.save(self.get_file_dir(card_id, 'card_comp.png'))
+            img_tr.save(self.get_file_dir(card_id, "card_tr.png"))
+            img_comp.save(self.get_file_dir(card_id, "card_comp.png"))
 
     @classmethod
     def normalize_numeric(cls, val):
@@ -341,8 +357,8 @@ class CardType:
         :param val:
         :return:
         """
-        val = val.split('\n')[0].replace('o', '0').replace('D', '0')
-        return re.sub(r'\D', '', val)
+        val = val.split("\n")[0].replace("o", "0").replace("D", "0")
+        return re.sub(r"\D", "", val)
 
     @classmethod
     def has_marker(cls, card):
@@ -355,7 +371,10 @@ class CardType:
         found_value, img, _ = cls.recognize_area(card, getattr(cls, cls.marker_area))
         if cls.DEBUG:
             img.show()
-            LOGGER.info('** Marker: expected - `%s`; found - `%s`' % (cls.marker_value, found_value.decode('utf-8', 'ignore')))
+            LOGGER.info(
+                "** Marker: expected - `%s`; found - `%s`"
+                % (cls.marker_value, found_value.decode("utf-8", "ignore"))
+            )
         return found_value.lower() == cls.marker_value.lower()
 
     @classmethod
@@ -372,7 +391,7 @@ class CardType:
         enh = ImageEnhance.Contrast(img)
         img = enh.enhance(1.4)
 
-        img = ImageOps.expand(img, border=60, fill='white')
+        img = ImageOps.expand(img, border=60, fill="white")
 
         threshold = 150
         img = img.point(lambda p: p > threshold and 255)
@@ -389,9 +408,9 @@ class CardType:
         :return:
         """
         start = img.size[0] - box_size - bg_start
-        bg_sprite = img.crop((start, bg_start, start+box_size, bg_start+box_size))
+        bg_sprite = img.crop((start, bg_start, start + box_size, bg_start + box_size))
 
-        bg_img = Image.new('RGBA', (img.size[0], img.size[1]), (0, 0, 0, 0))
+        bg_img = Image.new("RGBA", (img.size[0], img.size[1]), (0, 0, 0, 0))
 
         for y in range(0, bg_img.size[1], box_size):
             for x in range(0, bg_img.size[0], box_size):
@@ -413,7 +432,7 @@ class CardType:
         """
         dr = ImageDraw.Draw(img)
 
-        line_height = font.getbbox('jN')[1] * 1.25
+        line_height = font.getbbox("jN")[1] * 1.25
 
         for line in text.splitlines():
             dr.text((x, y), line, color, font=font)
@@ -445,10 +464,10 @@ class CardType:
         :return:
         """
         if font_name is None:
-            font_name = 'Ubuntu-M.ttf'
+            font_name = "Ubuntu-M.ttf"
 
-        if '/' not in font_name:
-            font_name = f'/usr/share/fonts/truetype/ubuntu/{font_name}'
+        if "/" not in font_name:
+            font_name = f"/usr/share/fonts/truetype/ubuntu/{font_name}"
 
         return ImageFont.truetype(font_name, font_size)
 
@@ -469,7 +488,7 @@ class CardType:
             img = img.rotate(area.rotate)
 
         text = TESS.recognize(img).strip()
-        text = re.sub(RE_SPACES, r'\g<0>', text)  # strip consecutive whitespaces
+        text = re.sub(RE_SPACES, r"\g<0>", text)  # strip consecutive whitespaces
 
         return text, img, img_orig
 
@@ -485,7 +504,7 @@ class CardType:
         max_height = int(height / 1.2)
         max_width = int(width / 1.2)
 
-        longest_line = ''
+        longest_line = ""
         longest_len = 0
 
         for line in text.splitlines():
@@ -503,10 +522,12 @@ class CardType:
             line_height = line_size[1]
 
             if lines_quantity > 1:
-                line_height = (lines_quantity * line_height)  # + ((lines_quantity-1) * line_height)
+                line_height = (
+                    lines_quantity * line_height
+                )  # + ((lines_quantity-1) * line_height)
 
             if line_height > max_height or line_size[0] > max_width:
-                return get_size(base_size-2)
+                return get_size(base_size - 2)
             return font, line_size
 
         font, text_size = get_size(100)
@@ -536,18 +557,20 @@ class CardType:
                     img_bg = cls.get_bg_img(img_orig, box_size=val.bg_box_size)
 
                 areas[name] = {
-                    'str': text,
-                    'coords': val.get_coords(),
-                    'img_bg': img_bg,
-                    'img_orig': img_orig,
-                    'img': img,
-                    'render': val.render,
-                    'rotate': val.rotate
+                    "str": text,
+                    "coords": val.get_coords(),
+                    "img_bg": img_bg,
+                    "img_orig": img_orig,
+                    "img": img,
+                    "render": val.render,
+                    "rotate": val.rotate,
                 }
         return areas
 
 
-def debug_image(image_path, card_type, debug=False, target_area='text', show_composite=False):
+def debug_image(
+    image_path, card_type, debug=False, target_area="text", show_composite=False
+):
     """Вспомогательная функция, используется при объявлении типов карт (создании классов),
     для нахождения координат регионов.
 
@@ -562,21 +585,23 @@ def debug_image(image_path, card_type, debug=False, target_area='text', show_com
     cards = get_cards_from_file(image_path)
     if debug:
         for card in cards:
-            card['img'].show()
+            card["img"].show()
 
     matches = card_type(cards)
 
-    LOGGER.warning('** Card indexes: %s' % matches.cards.keys())
+    LOGGER.warning("** Card indexes: %s" % matches.cards.keys())
 
     for idx, card in matches.cards.items():
-
         if not show_composite:
-            LOGGER.warning('** Text in `%s` area: %s' % (target_area, card['areas'][target_area]['str']))
-            card['areas'][target_area]['img'].show()
+            LOGGER.warning(
+                "** Text in `%s` area: %s"
+                % (target_area, card["areas"][target_area]["str"])
+            )
+            card["areas"][target_area]["img"].show()
         else:
             card_id = card_type.get_card_id(idx, card)
             img_tr = card_type.get_tr_image(card, idx)
-            img_comp = card_type.get_composite_image(card['img'], img_tr, card_id)
+            img_comp = card_type.get_composite_image(card["img"], img_tr, card_id)
             img_comp.show()
 
 
@@ -588,15 +613,15 @@ def process_image(image_path, card_types):
     :param card_types:
     :return:
     """
-    LOGGER.info('Image processing started')
+    LOGGER.info("Image processing started")
 
     target_dir = os.path.splitext(image_path)[0]
-    LOGGER.debug('Target path: %s' % target_dir)
+    LOGGER.debug("Target path: %s" % target_dir)
     cards = get_cards_from_file(image_path)
 
     for card_type in card_types:
-        LOGGER.info('Processing using %s ...' % card_type.__name__)
+        LOGGER.info("Processing using %s ..." % card_type.__name__)
         data = card_type(cards, target_dir)
         data.save_files()
 
-    LOGGER.info('Image processing finished')
+    LOGGER.info("Image processing finished")

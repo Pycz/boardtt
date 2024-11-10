@@ -6,15 +6,14 @@ from boardtt.utils import configure, CardType, CardArea, process_image, debug_im
 class StarWarsLure(CardType):
     """`Lure of The Dark Side` expansion cards deck."""
 
-    marker_area = 'type_name'
-    card_id_area = 'card_id'
-    norm_numeric = ('card_id',)
+    marker_area = "type_name"
+    card_id_area = "card_id"
+    norm_numeric = ("card_id",)
 
 
 class StarWarsLureEnhance(StarWarsLure):
-
-    alias = 'enhance'
-    marker_value = 'ENHANCE'
+    alias = "enhance"
+    marker_value = "ENHANCE"
 
     type_name = CardArea(0.8, 7.7, 60.1, 61.5, bg_box_size=3)
     card_id = CardArea(55.4, 60.5, 78, 80.7, render=False)
@@ -23,9 +22,8 @@ class StarWarsLureEnhance(StarWarsLure):
 
 
 class StarWarsLureEvent(StarWarsLure):
-
-    alias = 'event'
-    marker_value = 'EVENT'
+    alias = "event"
+    marker_value = "EVENT"
 
     type_name = CardArea(2, 7.3, 61.4, 62.7, bg_box_size=2)
     card_id = CardArea(53.8, 59, 79.8, 81.4, render=False)
@@ -34,9 +32,8 @@ class StarWarsLureEvent(StarWarsLure):
 
 
 class StarWarsLureUnit(StarWarsLure):
-
-    alias = 'unit'
-    marker_value = 'UNIT'
+    alias = "unit"
+    marker_value = "UNIT"
 
     type_name = CardArea(2.7, 6.2, 47.3, 48.6, bg_box_size=2)
     card_id = CardArea(56.2, 60.7, 76.1, 81.4, render=False)
@@ -45,9 +42,8 @@ class StarWarsLureUnit(StarWarsLure):
 
 
 class StarWarsLureFate(StarWarsLure):
-
-    alias = 'fate'
-    marker_value = 'FATE'
+    alias = "fate"
+    marker_value = "FATE"
 
     type_name = CardArea(55, 59, 4.4, 5.7)
     card_id = CardArea(56, 60.1, 80.1, 81.7, render=False)
@@ -56,9 +52,8 @@ class StarWarsLureFate(StarWarsLure):
 
 
 class StarWarsLureObjective(StarWarsLure):
-
-    alias = 'objective'
-    marker_value = 'OBJECTIVE'
+    alias = "objective"
+    marker_value = "OBJECTIVE"
 
     type_name = CardArea(39.3, 40.6, 78, 85.7, rotate=-90)
     card_id = CardArea(53, 54.3, 1, 5.2, render=False, rotate=-90)
@@ -68,9 +63,11 @@ class StarWarsLureObjective(StarWarsLure):
 
 ###################################################################
 
-IMAGE_PATH = '/home/idle/sw1.png'  # Put your path here.
+IMAGE_PATH = "/home/idle/sw1.png"  # Put your path here.
 
-configure(image_dpi=600, card_height_mm=88.35, card_width_mm=62.1, log_level=logging.DEBUG)
+configure(
+    image_dpi=600, card_height_mm=88.35, card_width_mm=62.1, log_level=logging.DEBUG
+)
 
 ###################################################################
 # Debug example:
@@ -82,10 +79,13 @@ configure(image_dpi=600, card_height_mm=88.35, card_width_mm=62.1, log_level=log
 # debug_image(IMAGE_PATH, handle, show_composite=True)
 ###################################################################
 
-process_image(IMAGE_PATH, (
-    StarWarsLureEnhance,
-    StarWarsLureEvent,
-    StarWarsLureUnit,
-    StarWarsLureFate,
-    StarWarsLureObjective,
-))
+process_image(
+    IMAGE_PATH,
+    (
+        StarWarsLureEnhance,
+        StarWarsLureEvent,
+        StarWarsLureUnit,
+        StarWarsLureFate,
+        StarWarsLureObjective,
+    ),
+)
