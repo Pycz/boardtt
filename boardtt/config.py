@@ -7,8 +7,12 @@ class Config:
     cards_cols: int  # сколько столбцов карт на скане
 
     image_dpi: int = 300
-    offset_from_top_border_mm: int | float = 0   # сколько миллиметров от верхнего края до первой карточки
-    offset_from_left_border_mm: int | float = 0  # сколько миллиметров от левого края до первой карточки
+    offset_from_top_border_mm: int | float = (
+        0  # сколько миллиметров от верхнего края до первой карточки
+    )
+    offset_from_left_border_mm: int | float = (
+        0  # сколько миллиметров от левого края до первой карточки
+    )
     card_height_mm: int | float = 80  # высота карты в миллиметрах
     card_width_mm: int | float = 60  # ширина карты в миллиметрах
     offset_x_mm: int | float = 1  # отступ между картами по горизонтали

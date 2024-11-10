@@ -5,8 +5,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def configure_logging(log_level=logging.INFO, show_logger_names=False):
-    """Performs basic logging configuration.
-    """
+    """Performs basic logging configuration."""
     format_str = "%(levelname)s: %(message)s"
     if show_logger_names:
         format_str = "%(name)s\t\t " + format_str

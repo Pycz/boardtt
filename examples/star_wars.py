@@ -1,9 +1,7 @@
-import logging
-
-from boardtt.manager import debug_image, process_image
+from boardtt.manager import ImageProcessingManager
 from boardtt.card_type import CardType
 from boardtt.card_area import CardArea
-from boardtt.config import configure
+from boardtt.config import Config
 
 
 class StarWarsLure(CardType):
@@ -66,14 +64,10 @@ class StarWarsLureObjective(StarWarsLure):
 
 ###################################################################
 
-IMAGE_PATH = "/home/idle/sw1.png"  # Put your path here.
-
-configure(
-    image_dpi=600, card_height_mm=88.35, card_width_mm=62.1, log_level=logging.DEBUG
-)
+IMAGE_PATH = "sw1.png"  # Put your path here.
 
 ###################################################################
-# Debug example:
+# Debug example (that's wrong now):
 #
 # handle = StarWarsLureEnhance
 # target_area = 'text'
@@ -82,7 +76,16 @@ configure(
 # debug_image(IMAGE_PATH, handle, show_composite=True)
 ###################################################################
 
-process_image(
+config = Config(
+    cards_rows=3,
+    cards_cols=3,
+    image_dpi=600,
+    card_height_mm=88.35,
+    card_width_mm=62.1,
+)
+
+ImageProcessingManager(
+    config,
     IMAGE_PATH,
     (
         StarWarsLureEnhance,
@@ -91,4 +94,4 @@ process_image(
         StarWarsLureFate,
         StarWarsLureObjective,
     ),
-)
+).process()

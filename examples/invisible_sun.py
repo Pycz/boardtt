@@ -1,10 +1,9 @@
-import logging
 from pathlib import Path
 
-from boardtt.manager import process_image
+from boardtt.manager import ImageProcessingManager
 from boardtt.card_type import CardType
 from boardtt.card_area import CardArea
-from boardtt.config import configure
+from boardtt.config import Config
 
 
 class Base(CardType):
@@ -25,14 +24,17 @@ IMAGE_NAMES_IN_DIR = [
 ]
 FIRST_IMAGE = SOURCE_DIR / IMAGE_NAMES_IN_DIR[0]
 
-configure(
-    image_dpi=300,
-    card_height_mm=90,
-    card_width_mm=75,
-    cards_rows=2,
-    cards_cols=4,
-    log_level=logging.DEBUG,
-)
 
 for image_name in IMAGE_NAMES_IN_DIR:
-    process_image(SOURCE_DIR / image_name, (Regular,))
+    config = Config(
+        image_dpi=300,
+        card_height_mm=90,
+        card_width_mm=75,
+        cards_rows=2,
+        cards_cols=4,
+        offset_from_top_border_mm=17,
+        offset_from_left_border_mm=7,
+    )
+    ImageProcessingManager(
+        config=config, image_path=SOURCE_DIR / image_name, card_types=(Regular,)
+    ).process()
