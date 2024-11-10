@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from boardtt.utils import mm_to_pixels
+
 
 @dataclass
 class Config:
@@ -19,7 +21,7 @@ class Config:
     offset_y_mm: int | float = 1  # отступ между картами по вертикали
 
     def _mm_to_pixels(self, mm: int | float) -> int:
-        return int((self.image_dpi * mm) / 25.4)
+        return mm_to_pixels(mm, self.image_dpi)
 
     @property
     def card_height_px(self) -> int:

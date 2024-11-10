@@ -10,7 +10,7 @@ class Base(CardType):
     pass
 
 
-class Regular(Base):
+class RegularCard(Base):
     alias = "enhance"
     title = CardArea(10, 60, 10, 25, bg_box_size=3)
     text = CardArea(10, 60, 30, 80, bg_box_size=3)
@@ -36,5 +36,5 @@ for image_name in IMAGE_NAMES_IN_DIR:
         offset_from_left_border_mm=7,
     )
     ImageProcessingManager(
-        config=config, image_path=SOURCE_DIR / image_name, card_types=(Regular,)
+        config=config, image_path=SOURCE_DIR / image_name, card_types=(RegularCard,)
     ).process()

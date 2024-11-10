@@ -9,6 +9,7 @@ from boardtt.card_area import CardArea
 from boardtt.logger import LOGGER
 from boardtt.tesseract import TesseractAPI
 
+
 RE_SPACES = re.compile(r"(\s)+", re.MULTILINE)
 
 
@@ -146,10 +147,7 @@ class CardType:
         return card_id
 
     def save_files(self):
-        """Сохраняет файлы проекта локализации.
-
-        :return:
-        """
+        """Сохраняет файлы проекта локализации."""
         for idx, card in self.cards.items():
             card_id = self.get_card_id(idx, card)
 

@@ -1,3 +1,4 @@
+from boardtt.config import Config
 from boardtt.utils import mm_to_pixels
 
 
@@ -22,14 +23,11 @@ class CardArea:
         self.x1 = x1
         self.y1 = y1
 
-    def get_coords(self):
-        """Возвращает кортеж с координатами региона на карте.
-
-        :return:
-        """
+    def get_coords(self, config: Config) -> tuple[int, int, int, int]:
+        """Возвращает кортеж с координатами региона на карте."""
         return (
-            mm_to_pixels(self.x),
-            mm_to_pixels(self.y),
-            mm_to_pixels(self.x1),
-            mm_to_pixels(self.y1),
+            mm_to_pixels(self.x, dpi=config.image_dpi),
+            mm_to_pixels(self.y, dpi=config.image_dpi),
+            mm_to_pixels(self.x1, dpi=config.image_dpi),
+            mm_to_pixels(self.y1, dpi=config.image_dpi),
         )
