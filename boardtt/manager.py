@@ -17,7 +17,7 @@ class ImageProcessingManager:
         self.config = config
         self.image_path = image_path
         self.card_types = card_types
-        self.card_marker: CardMarker = PlanarCardMarker(image_path)
+        self.card_marker: CardMarker = PlanarCardMarker(config, image_path)
 
     def debug_process_card_type(
         self,
@@ -37,27 +37,28 @@ class ImageProcessingManager:
         """
         card_type.DEBUG = debug
 
-        cards = self.card_marker.get_cards()
-        if debug:
-            for card in cards:
-                card["img"].show()
-
-        matches = card_type(cards)
-
-        LOGGER.warning("** Card indexes: %s" % matches.cards.keys())
-
-        for idx, card in matches.cards.items():
-            if not show_composite:
-                LOGGER.warning(
-                    "** Text in `%s` area: %s"
-                    % (target_area, card["areas"][target_area]["str"])
-                )
-                card["areas"][target_area]["img"].show()
-            else:
-                card_id = card_type.get_card_id(idx, card)
-                img_tr = card_type.get_tr_image(card, idx)
-                img_comp = card_type.get_composite_image(card["img"], img_tr, card_id)
-                img_comp.show()
+        # THIS IS NOT WORKING ANYWAY
+        # cards = self.card_marker.get_cards()
+        # if debug:
+        #     for card in cards:
+        #         card["img"].show()
+        #
+        # matches = card_type(cards)
+        #
+        # LOGGER.warning("** Card indexes: %s" % matches.cards.keys())
+        #
+        # for idx, card in matches.cards.items():
+        #     if not show_composite:
+        #         LOGGER.warning(
+        #             "** Text in `%s` area: %s"
+        #             % (target_area, card["areas"][target_area]["str"])
+        #         )
+        #         card["areas"][target_area]["img"].show()
+        #     else:
+        #         card_id = card_type.get_card_id(idx, card)
+        #         img_tr = card_type.get_tr_image(card, idx)
+        #         img_comp = card_type.get_composite_image(card["img"], img_tr, card_id)
+        #         img_comp.show()
 
     def process(self):
         """Производит обработку указанного скана, используя
@@ -70,7 +71,7 @@ class ImageProcessingManager:
 
         for card_type in self.card_types:
             LOGGER.info("Processing using %s ..." % card_type.__name__)
-            card = card_type(cards, target_dir)
+            card = card_type(self.config, cards, target_dir)
             card.save_files()
 
         LOGGER.info("Image processing finished")

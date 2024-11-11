@@ -6,6 +6,7 @@ from collections import OrderedDict
 from PIL import Image, ImageEnhance, ImageOps, ImageDraw, ImageFont
 
 from boardtt.card_area import CardArea
+from boardtt.config import Config
 from boardtt.logger import LOGGER
 from boardtt.tesseract import TesseractAPI
 
@@ -40,7 +41,8 @@ class CardType:
 
     DEBUG = False
 
-    def __init__(self, cards, target_dir=None):
+    def __init__(self, config: Config, cards, target_dir=None):
+        self.config = config
         self.target_dir = target_dir
         self.cards = OrderedDict()
 
@@ -67,8 +69,7 @@ class CardType:
             pass
         return os.path.join(target_dir, fname)
 
-    @classmethod
-    def get_tr_image(cls, card, idx):
+    def get_tr_image(self, card, idx):
         """Возвращает изображение с оверлейным (локализованным) слоем.
 
         :param dict card: Словарь с данными карты
@@ -76,7 +77,7 @@ class CardType:
         :return:
         """
 
-        card_id = cls.get_card_id(idx, card)
+        card_id = self.get_card_id(idx, card)
         LOGGER.info("Generating localized image for %s ..." % card_id)
 
         card_coords = card["coords"]
@@ -106,8 +107,8 @@ class CardType:
                     font,
                     text_x,
                     text_y,
-                ) = cls.adjust_text_to_box(text, height, width)
-                img_tr = cls.render_text(img_tr, text, font, text_x, text_y)
+                ) = self.adjust_text_to_box(text, height, width)
+                img_tr = self.render_text(img_tr, text, font, text_x, text_y)
 
                 if rotate is not None:  # Восстанавливаем изначальную ориентацию.
                     abs_ = abs(rotate)
@@ -121,8 +122,7 @@ class CardType:
 
         return tr_img
 
-    @classmethod
-    def get_composite_image(cls, card_img, tr_img, card_id):
+    def get_composite_image(self, card_img, tr_img, card_id):
         """Возвращает сведённое локализованное изображение (оверлей + оригинал).
 
         :param card_img:
@@ -133,8 +133,7 @@ class CardType:
         LOGGER.info("Generating composite image for %s ..." % card_id)
         return Image.alpha_composite(card_img.convert("RGBA"), tr_img)
 
-    @classmethod
-    def get_card_id(cls, idx, card):
+    def get_card_id(self, idx, card):
         """Возвращает идентификатор карты.
 
         :param int idx:
@@ -142,8 +141,8 @@ class CardType:
         :return:
         """
         card_id = idx + 1
-        if cls.card_id_area is not None:
-            card_id = "%s-%s" % (card_id, card["areas"][cls.card_id_area]["str"])
+        if self.card_id_area is not None:
+            card_id = "%s-%s" % (card_id, card["areas"][self.card_id_area]["str"])
         return card_id
 
     def save_files(self):
@@ -196,22 +195,21 @@ class CardType:
         val = val.split("\n")[0].replace("o", "0").replace("D", "0")
         return re.sub(r"\D", "", val)
 
-    @classmethod
-    def has_marker(cls, card):
+    def has_marker(self, card):
         """Возвращает булево, указывающее на то, содержит ли изображение маркер типа
         (принадлежит ли карта к данному типу).
 
         :param card:
         :return:
         """
-        found_value, img, _ = cls.recognize_area(card, getattr(cls, cls.marker_area))
-        if cls.DEBUG:
+        found_value, img, _ = self.recognize_area(card, getattr(self, self.marker_area))
+        if self.DEBUG:
             img.show()
             LOGGER.info(
                 "** Marker: expected - `%s`; found - `%s`"
-                % (cls.marker_value, found_value.decode("utf-8", "ignore"))
+                % (self.marker_value, found_value.decode("utf-8", "ignore"))
             )
-        return found_value.lower() == cls.marker_value.lower()
+        return found_value.lower() == self.marker_value.lower()
 
     @classmethod
     def enhance_img(cls, img):
@@ -254,8 +252,7 @@ class CardType:
 
         return bg_img
 
-    @classmethod
-    def render_text(cls, img, text, font, x=10, y=10, color=(0, 0, 0)):
+    def render_text(self, img, text, font, x=10, y=10, color=(0, 0, 0)):
         """Печатает тект на изображении.
 
         :param img:
@@ -307,8 +304,7 @@ class CardType:
 
         return ImageFont.truetype(font_name, font_size)
 
-    @classmethod
-    def recognize_area(cls, card, area):
+    def recognize_area(self, card, area):
         """Производит попытку распознать регион.
         Возвращает кортеж: (распознанный_текст, изображение_региона_для_распознания, оригинальное_изображение_региона)
 
@@ -316,9 +312,9 @@ class CardType:
         :param area:
         :return:
         """
-        marker_coords = area.get_coords()
+        marker_coords = area.get_coords(self.config)
         img_orig = card.crop(marker_coords)
-        img = cls.enhance_img(img_orig)
+        img = self.enhance_img(img_orig)
 
         if area.rotate is not None:
             img = img.rotate(area.rotate)
@@ -328,8 +324,7 @@ class CardType:
 
         return text, img, img_orig
 
-    @classmethod
-    def adjust_text_to_box(cls, text, height, width):
+    def adjust_text_to_box(self, text, height, width):
         """Вписывает текст в пределы, подбирая его размер.
 
         :param text: Текст
@@ -352,7 +347,7 @@ class CardType:
         lines_quantity = len(text.splitlines())
 
         def get_size(base_size):
-            font = cls.get_font(base_size)
+            font = self.get_font(base_size)
             line_size = font.getbbox(longest_line)
 
             line_height = line_size[1]
@@ -372,29 +367,28 @@ class CardType:
 
         return font, text_x, text_y
 
-    @classmethod
-    def get_areas(cls, card):
+    def get_areas(self, card):
         """Возвращает словарь с данными регионов карты.
 
         :param card:
         :return:
         """
         areas = {}
-        for name, val in cls.__dict__.items():
+        for name, val in self.__dict__.items():
             if isinstance(val, CardArea):
-                text, img, img_orig = cls.recognize_area(card, val)
+                text, img, img_orig = self.recognize_area(card, val)
 
-                if name in cls.norm_numeric:
-                    text = cls.normalize_numeric(text)
+                if name in self.norm_numeric:
+                    text = self.normalize_numeric(text)
 
                 img_bg = None
 
                 if val.render:
-                    img_bg = cls.get_bg_img(img_orig, box_size=val.bg_box_size)
+                    img_bg = self.get_bg_img(img_orig, box_size=val.bg_box_size)
 
                 areas[name] = {
                     "str": text,
-                    "coords": val.get_coords(),
+                    "coords": val.get_coords(self.config),
                     "img_bg": img_bg,
                     "img_orig": img_orig,
                     "img": img,

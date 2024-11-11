@@ -28,10 +28,12 @@ FIRST_IMAGE = SOURCE_DIR / IMAGE_NAMES_IN_DIR[0]
 for image_name in IMAGE_NAMES_IN_DIR:
     config = Config(
         image_dpi=300,
-        card_height_mm=90,
-        card_width_mm=75,
-        cards_rows=2,
-        cards_cols=4,
+        card_height_mm=89,
+        card_width_mm=64,
+        cards_rows=4,  # TODO: revert it here - rows and columns are flipped
+        cards_cols=2,
+        offset_x_mm=3,
+        offset_y_mm=3,
         offset_from_top_border_mm=17,
         offset_from_left_border_mm=7,
     )
